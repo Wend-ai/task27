@@ -1,0 +1,109 @@
+﻿Deploying a Static Site to S3 Using LocalStack
+=============================================
+
+
+This guide explains how to deploy a static website to an S3 bucket using LocalStack. 
+LocalStack emulates AWS services locally, making it great for development and testing.
+
+
+Prerequisites
+-------------
+Before you begin, make sure you have:
+
+
+- Docker
+- LocalStack
+- awslocal CLI
+- A folder of static files (e.g., "dist/" or "build/")
+
+
+---
+
+
+Steps to Deploy
+---------------
+
+
+1. Start LocalStack
+--------------------
+You can start LocalStack using Docker Compose:
+
+
+    docker-compose up -d
+
+
+Or directly with Docker:
+
+
+    docker run --rm -it -p 4566:4566 -p 4571:4571 localstack/localstack
+
+
+2. Create an S3 Bucket
+----------------------
+
+
+    awslocal s3api create-bucket --bucket my-site
+
+
+3. Upload Site Files to S3
+--------------------------
+
+
+Assuming your site is built into a "dist/" folder:
+
+
+    awslocal s3 sync dist/ s3://my-site/
+
+
+4. Configure the Bucket as a Website
+------------------------------------
+
+
+    awslocal s3 website s3://my-site/ --index-document index.html
+
+
+5. Set a Bucket Policy (Optional - for public access)
+-----------------------------------------------------
+
+
+Create a file called "policy.json" with the following content:
+
+
+    {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "PublicReadGetObject",
+          "Effect": "Allow",
+          "Principal": "*",
+          "Action": "s3:GetObject",
+          "Resource": "arn:aws:s3:::my-site/*"
+        }
+      ]
+    }
+
+
+Then apply the policy:
+
+
+    awslocal s3api put-bucket-policy --bucket my-site --policy file://policy.json
+
+
+6. Access the Website
+----------------------
+
+
+You can access your site at:
+
+
+    http://.s3.localhost.localstack.cloud:4566/index.html
+
+
+---
+
+
+Done!
+-----
+
+
+You've successfully deployed a static site to S3 using LocalStack.
